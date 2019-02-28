@@ -1,0 +1,6 @@
+# Python virtual environment
+matrix
+
+# Backup files
+*~
+
