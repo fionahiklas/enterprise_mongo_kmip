@@ -4,3 +4,10 @@ matrix
 # Backup files
 *~
 
+# Log files/directory
+log
+*.log
+
+# Database
+*.sqlite
+

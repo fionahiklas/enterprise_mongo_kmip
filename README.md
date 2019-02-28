@@ -19,6 +19,7 @@ Install the [PyKMIP](https://github.com/OpenKMIP/PyKMIP) package using `pip`
 
 ```
 pip install pykmip
+pip install requests # This seems to be missing from the dependencies in PyKMIP
 ```
 
 
@@ -39,3 +40,12 @@ easyrsa sign-req server kmipserver
 ```
 
 
+### Starting the server
+
+Run the following command
+
+```
+./matrix/bin/pykmip-server -f server.conf -l ./pykmip.log &
+```
+
+You can monitor progress from the `pykmip.log` file
