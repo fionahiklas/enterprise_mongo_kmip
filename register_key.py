@@ -11,25 +11,55 @@ from kmip.pie import client
 from kmip import enums
 
 import logging
+import argparse
+import base64
 
+# Basic logging setup
 logging.basicConfig(filename="./kmipclient.log", level=logging.DEBUG)
+log = logging.getLogger("register")
 
-kmipClient = client.ProxyKmipClient(
-    config = "client",
-    config_file = "./client.conf"
-)
 
-symmetric_key = objects.SymmetricKey(
-    enums.CryptographicAlgorithm.AES,
-    128,
-    (
-        b'\x00\x01\x02\x03\x04\x05\x06\x07'
-        b'\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F'
+def storeKeyInKMIPServer(keyFilename):
+    log.debug("Creating KMIP client")
+    kmipClient = client.ProxyKmipClient(
+        config = "client",
+        config_file = "./client.conf"
     )
-)
-with kmipClient:
-    result = kmipClient.register(symmetric_key)
-    print "Result of registering = " + result
+
+    log.debug("Reading key from file: %s", keyFilename)
+    with open(keyFilename, 'r') as keyFile:
+        log.debug("Opened file for reading")
+        keyFileData = keyFile.read().strip()
+
+    log.debug("Read key data: %s", keyFileData)
+    decodedData = base64.decodestring(keyFileData)
+    log.debug("Size of decoded data: %d", len(decodedData))
+    
+    symmetric_key = objects.SymmetricKey(
+        enums.CryptographicAlgorithm.RSA,
+        256,
+        decodedData
+    )
+    with kmipClient:
+         result = kmipClient.register(symmetric_key)
+         log.info("Result of registering = %s", result)
+
+
+# Parse the command line arguments
+parser = argparse.ArgumentParser(description='Register sysmetric key')
+parser.add_argument('--key', dest='keyFile', action='store', metavar='FILE', help='path to key to store', nargs='?')
+parser.add_argument('--apply', dest='apply', action='store_const', default='false', const='true', help='add this to actually apply the change, otherwise no server operation is performed')
+
+args = parser.parse_args()
+
+if args.apply == 'true':
+    log.info("Storing key into KMIP server")
+    log.debug("Using filename: %s", args.keyFile)
+    storeKeyInKMIPServer(args.keyFile)
+
+else:
+    log.info("NOT applying any change to server")
+
 
 
 
